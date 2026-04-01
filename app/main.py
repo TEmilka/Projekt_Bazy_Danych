@@ -100,9 +100,9 @@ def run_all_tests(pg, mysql, mongo, redis_db, size):
     # =========================
     # INSERT
     # =========================
-    product_data = [product(size + 1)]
-    prescription_data = [prescription(size + 1, size)]
-    sale_data = [sale(size + 1, size)]
+    product_data = [lambda: product(random.randint(100000, 999999))]
+    prescription_data = [lambda: prescription(random.randint(100000, 999999), size)]
+    sale_data = [lambda: sale(random.randint(100000, 999999), size)]
 
     run("postgres","INSERT_PRODUCT", lambda x: insert_product_postgres(pg, x), product_data, "app/results/postgres.csv", size)
     run("mysql","INSERT_PRODUCT", lambda x: insert_product_mysql(mysql, x), product_data, "app/results/mysql.csv", size)

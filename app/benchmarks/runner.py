@@ -2,33 +2,22 @@ import time
 import csv
 import os
 
-def run(db_name, scenario, func, data_iterable, output_file, dataset_size, batch_size=1):
-    start = time.time()
-    ops = 0
+def run(db_name, scenario, func, data_iterable, output_file, dataset_size, repeats=3):
+    times = []
 
-    batch = []
+    for i in range(repeats):
+        start = time.time()
 
-    for item in data_iterable:
-        batch.append(item)
+        ops = 0
+        for item in data_iterable:
+            func(item() if callable(item) else item)
+            ops += 1
 
-        if len(batch) == batch_size:
-            if batch_size == 1:
-                func(batch[0])
-            else:
-                func(batch)
+        end = time.time()
+        total_time = end - start
+        times.append(total_time)
 
-            ops += len(batch)
-            batch = []
-
-    if batch:
-        if batch_size == 1:
-            func(batch[0])
-        else:
-            func(batch)
-        ops += len(batch)
-
-    end = time.time()
-    total_time = end - start
+    avg_time = sum(times) / len(times)
 
     out_dir = os.path.dirname(output_file)
     if out_dir:
@@ -36,7 +25,6 @@ def run(db_name, scenario, func, data_iterable, output_file, dataset_size, batch
 
     file_exists = os.path.isfile(output_file)
 
-    # ===== zapis =====
     with open(output_file, "a", newline="") as f:
         writer = csv.writer(f)
 
@@ -52,10 +40,10 @@ def run(db_name, scenario, func, data_iterable, output_file, dataset_size, batch
             db_name,
             scenario,
             dataset_size,
-            round(total_time, 4)
+            round(avg_time, 6)
         ])
 
     print(
         f"{db_name} | {scenario} | size={dataset_size} | "
-        f"time={total_time:.6f}s"
+        f"AVG={avg_time:.6f}s | runs={times}"
     )

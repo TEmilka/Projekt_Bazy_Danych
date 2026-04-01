@@ -69,10 +69,7 @@ CREATE TABLE prescriptions (
 -- ======================
 -- INDEXES
 -- ======================
-
 CREATE INDEX idx_sales_employee ON sales(employee_id);
 CREATE INDEX idx_sales_customer ON sales(customer_id);
-
 CREATE INDEX idx_products_name ON products(name);
-
 CREATE INDEX idx_prescriptions_customer ON prescriptions(customer_id);

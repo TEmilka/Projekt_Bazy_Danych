@@ -1,17 +1,36 @@
-# 1. telefon
-def update_phone_sql(conn,d):
-    cur=conn.cursor()
-    cur.execute("UPDATE customers SET phone=%s WHERE customer_id=%s",(d["phone"],d["id"]))
+# =========================
+# UPDATE – PRICE BY CATEGORY
+# =========================
+def update_price_by_category_sql(conn, _):
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE products
+        SET price = price * 1.1
+        WHERE category = 'product_category_1'
+    """)
     conn.commit()
 
-def update_phone_mongo(db,d):
-    db.customers.update_one({"_id":d["id"]},{"$set":{"phone":d["phone"]}})
 
-def update_phone_redis(r,d):
-    r.hset(f"customer:{d['id']}","phone",d["phone"])
+def update_price_by_category_mongo(db, _):
+    db.products.update_many(
+        {"category": "product_category_1"},
+        {"$mul": {"price": 1.1}}
+    )
 
 
-# 2. awans
+def update_price_by_category_redis(r, _):
+    for key in r.scan_iter("product:*"):
+        data = r.hgetall(key)
+        if data.get("category") == "product_category_1":
+            try:
+                price = float(data.get("price", 0)) * 1.1
+                r.hset(key, "price", str(price))
+            except:
+                continue
+
+# =========================
+# UPDATE – PROMOTE EMPLOYEE
+# =========================
 def promote_sql(conn,d):
     cur=conn.cursor()
     cur.execute("UPDATE employees SET job_position=%s,salary=%s WHERE employee_id=%s",
@@ -25,7 +44,9 @@ def promote_redis(r,d):
     r.hset(f"employee:{d['id']}",mapping=d)
 
 
-# 3. wygasłe recepty
+# =========================
+# UPDATE – EXPIRE PRESCRIPTIONS
+# =========================
 from datetime import datetime
 
 def expire_sql(conn,_):

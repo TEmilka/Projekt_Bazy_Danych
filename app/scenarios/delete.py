@@ -1,89 +1,118 @@
 # =========================
-# 1. DELETE EMPLOYEE
+# DELETE – SALES BY STATUS
 # =========================
+from datetime import datetime, timedelta
 
-def delete_employee_sql(conn, id):
+
+def delete_sales_by_status_sql(conn, _):
     cur = conn.cursor()
-
-    # 🔥 najpierw usuń sales (bo FK)
-    cur.execute("DELETE FROM sales WHERE employee_id=%s", (id,))
-
-    # potem employee
-    cur.execute("DELETE FROM employees WHERE employee_id=%s", (id,))
-
+    cur.execute("DELETE FROM sales WHERE status = 'Closed'")
     conn.commit()
 
 
-def delete_employee_mongo(db, id):
-    db.sales.delete_many({"employee_id": id})
-    db.employees.delete_one({"_id": id})
+def delete_sales_by_status_mongo(db, _):
+    db.sales.delete_many({"status": "Closed"})
 
 
-def delete_employee_redis(r, id):
-    # usuń employee
-    r.delete(f"employee:{id}")
-
-    # usuń sales powiązane
+def delete_sales_by_status_redis(r, _):
     for key in r.scan_iter("sale:*"):
         if key.endswith(":products"):
             continue
 
-        if r.hget(key, "employee_id") == str(id):
+        data = r.hgetall(key)
+        if data.get("status") == "Closed":
             sid = key.split(":")[1]
             r.delete(key)
             r.delete(f"sale:{sid}:products")
 
 
 # =========================
-# 2. DELETE PRESCRIPTION
+# DELETE – HIGH SALARY EMPLOYEES
 # =========================
 
-def delete_prescription_sql(conn, id):
-    cur = conn.cursor()
-    cur.execute("DELETE FROM prescriptions WHERE prescription_id=%s", (id,))
-    conn.commit()
-
-
-def delete_prescription_mongo(db, id):
-    db.prescriptions.delete_one({"_id": id})
-
-
-def delete_prescription_redis(r, id):
-    r.delete(f"prescription:{id}")
-
-
-# =========================
-# 3. DELETE CUSTOMER (zależności)
-# =========================
-
-def delete_customer_sql(conn, id):
+def delete_high_salary_employees_sql(conn, _):
     cur = conn.cursor()
 
-    cur.execute("DELETE FROM sales WHERE customer_id=%s", (id,))
-    cur.execute("DELETE FROM prescriptions WHERE customer_id=%s", (id,))
-    cur.execute("DELETE FROM customers WHERE customer_id=%s", (id,))
+    cur.execute("""
+        DELETE FROM employees e
+        WHERE salary > 7000
+        AND NOT EXISTS (
+            SELECT 1 FROM sales s WHERE s.employee_id = e.employee_id
+        )
+    """)
 
     conn.commit()
 
 
-def delete_customer_mongo(db, id):
-    db.sales.delete_many({"customer_id": id})
-    db.prescriptions.delete_many({"customer_id": id})
-    db.customers.delete_one({"_id": id})
+def delete_high_salary_employees_mongo(db, _):
+    db.employees.delete_many({"salary": {"$gt": 7000}})
 
 
-def delete_customer_redis(r, id):
-    r.delete(f"customer:{id}")
+def delete_high_salary_employees_redis(r, _):
+    for key in r.scan_iter("employee:*"):
+        salary = r.hget(key, "salary")
+        try:
+            if float(salary) > 7000:
+                r.delete(key)
+        except:
+            continue
 
-    for key in r.scan_iter("prescription:*"):
-        if r.hget(key, "customer_id") == str(id):
-            r.delete(key)
+
+# =========================
+# 3. DELETE OLD SALES
+# =========================
+
+def delete_old_sales_postgres(conn, _):
+    cur = conn.cursor()
+
+    cur.execute("""
+        DELETE FROM sales
+        WHERE sale_date < NOW() - INTERVAL '30 days'
+    """)
+
+    conn.commit()
+
+def delete_old_sales_mysql(conn, _):
+    cur = conn.cursor()
+
+    cur.execute("""
+        DELETE FROM sales
+        WHERE sale_date < NOW() - INTERVAL 30 DAY
+    """)
+
+    conn.commit()
+
+
+def delete_old_sales_mongo(db, _):
+    cutoff = datetime.now() - timedelta(days=30)
+
+    old_sales = db.sales.find({"sale_date": {"$lt": cutoff}})
+
+    for s in old_sales:
+        db.sale_items.delete_many({"sale_id": s["_id"]})
+
+    db.sales.delete_many({"sale_date": {"$lt": cutoff}})
+
+
+def delete_old_sales_redis(r, _):
+    cutoff = datetime.now() - timedelta(days=30)
 
     for key in r.scan_iter("sale:*"):
         if key.endswith(":products"):
             continue
 
-        if r.hget(key, "customer_id") == str(id):
+        data = r.hgetall(key)
+
+        if "sale_date" not in data:
+            continue
+
+        try:
+            sale_date = datetime.fromisoformat(data["sale_date"])
+        except:
+            continue
+
+        if sale_date < cutoff:
             sid = key.split(":")[1]
+
             r.delete(key)
             r.delete(f"sale:{sid}:products")

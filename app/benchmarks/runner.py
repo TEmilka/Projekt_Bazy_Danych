@@ -20,7 +20,6 @@ def run(db_name, scenario, func, data_iterable, output_file, dataset_size, batch
             ops += len(batch)
             batch = []
 
-    # reszta batcha
     if batch:
         if batch_size == 1:
             func(batch[0])
@@ -31,7 +30,6 @@ def run(db_name, scenario, func, data_iterable, output_file, dataset_size, batch
     end = time.time()
     total_time = end - start
 
-    # ===== folder =====
     out_dir = os.path.dirname(output_file)
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)

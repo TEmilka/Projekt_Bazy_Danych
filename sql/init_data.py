@@ -11,7 +11,6 @@ def populate_postgres(host=None, size=10000):
     conn = psycopg2.connect(host=host, user='admin', password='admin', dbname='apteka')
     cur = conn.cursor()
 
-    # insert customers
     batch = []
     for i in range(size):
         c = customer(i)
@@ -24,7 +23,6 @@ def populate_postgres(host=None, size=10000):
         cur.executemany("INSERT INTO customers (name,surname,pesel,phone) VALUES (%s,%s,%s,%s)", batch)
         conn.commit()
 
-    # products
     batch = []
     for i in range(size):
         p = product(i)
@@ -37,7 +35,6 @@ def populate_postgres(host=None, size=10000):
         cur.executemany("INSERT INTO products (name,is_prescription_required,barcode,price,category) VALUES (%s,%s,%s,%s,%s)", batch)
         conn.commit()
 
-    # employees
     batch = []
     for i in range(size):
         e = employee(i)
@@ -50,7 +47,6 @@ def populate_postgres(host=None, size=10000):
         cur.executemany("INSERT INTO employees (name,surname,phone,job_position,salary) VALUES (%s,%s,%s,%s,%s)", batch)
         conn.commit()
 
-    # prescriptions
     batch = []
     for i in range(size):
         pr = prescription(i)
@@ -63,7 +59,6 @@ def populate_postgres(host=None, size=10000):
         cur.executemany("INSERT INTO prescriptions (customer_id,issue_date,expiry_date,status) VALUES (%s,%s,%s,%s)", batch)
         conn.commit()
 
-    # sales + sale_items (simple insertion)
     for i in range(size):
         s = sale(i)
         cur.execute("INSERT INTO sales (customer_id,employee_id,sale_date,total_value,status) VALUES (%s,%s,%s,%s,%s) RETURNING sale_id",
@@ -88,7 +83,6 @@ def populate_mysql(host=None, size=10000):
     conn = pymysql.connect(host=host, user='admin', password='admin', database='apteka')
     cur = conn.cursor()
 
-    # Similar approach as Postgres
     batch = []
     for i in range(size):
         c = customer(i)
@@ -101,7 +95,6 @@ def populate_mysql(host=None, size=10000):
         cur.executemany("INSERT INTO customers (name,surname,pesel,phone) VALUES (%s,%s,%s,%s)", batch)
         conn.commit()
 
-    # products
     batch = []
     for i in range(size):
         p = product(i)
@@ -114,7 +107,6 @@ def populate_mysql(host=None, size=10000):
         cur.executemany("INSERT INTO products (name,is_prescription_required,barcode,price,category) VALUES (%s,%s,%s,%s,%s)", batch)
         conn.commit()
 
-    # employees
     batch = []
     for i in range(size):
         e = employee(i)
@@ -127,7 +119,6 @@ def populate_mysql(host=None, size=10000):
         cur.executemany("INSERT INTO employees (name,surname,phone,job_position,salary) VALUES (%s,%s,%s,%s,%s)", batch)
         conn.commit()
 
-    # prescriptions
     batch = []
     for i in range(size):
         pr = prescription(i)
@@ -158,5 +149,4 @@ def populate_mysql(host=None, size=10000):
 if __name__ == '__main__':
     import sys
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 10000
-    # default to postgres populate
     populate_postgres(size=n)

@@ -7,13 +7,11 @@ def populate(size, host=None):
     client = MongoClient(f"mongodb://admin:admin@{host}:27017/")
     db = client['pharmacy_db']
 
-    # drop existing
     for col in ['customers','products','employees','prescriptions','sales','sale_items']:
         if col in db.list_collection_names():
             db[col].drop()
 
     batch = 1000
-    # customers
     docs = []
     for i in range(size):
         docs.append({
@@ -29,7 +27,6 @@ def populate(size, host=None):
     if docs:
         db.customers.insert_many(docs)
 
-    # products
     docs = []
     for i in range(size):
         p = product(i)
@@ -40,7 +37,6 @@ def populate(size, host=None):
     if docs:
         db.products.insert_many(docs)
 
-    # employees
     docs = []
     for i in range(size):
         e = employee(i)
@@ -51,7 +47,6 @@ def populate(size, host=None):
     if docs:
         db.employees.insert_many(docs)
 
-    # prescriptions
     docs = []
     for i in range(size):
         pr = prescription(i)
@@ -62,7 +57,6 @@ def populate(size, host=None):
     if docs:
         db.prescriptions.insert_many(docs)
 
-    # sales and sale_items
     docs_sales = []
     docs_items = []
     for i in range(size):

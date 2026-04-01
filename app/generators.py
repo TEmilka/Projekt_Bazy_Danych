@@ -3,12 +3,12 @@ import datetime
 
 def product(i):
     return {
-        "id": i + 1,  # ✅ FIX (Mongo/Redis też będą miały 1..N)
+        "id": i + 1,
         "name": f"Product {i}",
         "is_prescription_required": bool(i % 2),
         "barcode": i,
         "price": random.randint(10, 500),
-        "category": f"cat_{i % 10}"
+        "category": f"product_category_{i % 10}"
     }
 
 def update_price(i):
@@ -20,11 +20,11 @@ def update_price(i):
 def sale(i, size):
     return {
         "id": i + 1,
-        "customer_id": random.randint(1, size),   # ✅ FIX
-        "employee_id": random.randint(1, size),   # ✅ FIX
+        "customer_id": random.randint(1, size),
+        "employee_id": random.randint(1, size),
         "products": [
             {
-                "id": random.randint(1, size),   # ✅ FIX (było 0!)
+                "id": random.randint(1, size),
                 "product_quantity": 1
             }
             for _ in range(5)
@@ -36,7 +36,7 @@ def sale(i, size):
 
 def customer(i):
     return {
-        "id": i + 1,  # ✅ FIX
+        "id": i + 1,
         "name": f"Customer {i}",
         "surname": f"Surname {i}",
         "pesel": f"{80000000000 + i}",
@@ -45,7 +45,7 @@ def customer(i):
 
 def employee(i):
     return {
-        "id": i + 1,  # ✅ FIX
+        "id": i + 1,
         "name": f"Employee {i}",
         "surname": f"EmpSurname {i}",
         "phone": f"{500000000 + (i % 1000000)}",
@@ -59,7 +59,7 @@ def prescription(i, size):
 
     return {
         "id": i + 1,
-        "customer_id": random.randint(1, size),  # ✅ FIX
+        "customer_id": random.randint(1, size),
         "issue_date": issue,
         "expiry_date": expiry,
         "status": "Open" if random.random() < 0.75 else "Closed"

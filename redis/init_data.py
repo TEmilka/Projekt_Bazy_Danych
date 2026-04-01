@@ -12,7 +12,6 @@ r = redis.Redis(
 
 
 def populate(size):
-    # flush existing (be careful!)
     r.flushdb()
     batch = 10000
 

@@ -1,4 +1,4 @@
-db = db.getSiblingDB("pharmacy_db");
+db = db.getSiblingDB("apteka");
 
 // ======================
 // CUSTOMERS

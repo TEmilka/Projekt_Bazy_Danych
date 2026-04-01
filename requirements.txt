@@ -5,3 +5,6 @@ redis
 mysql-connector-python
 python-dotenv
 cryptography
+pandas
+matplotlib
+seaborn

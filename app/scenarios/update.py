@@ -36,5 +36,16 @@ def expire_sql(conn,_):
 def expire_mongo(db,_):
     db.prescriptions.update_many({"expiry_date":{"$lt":datetime.now()}},{"$set":{"status":"Expired"}})
 
-def expire_redis(r,_):
-    pass
+def expire_redis(r, _):
+    now = datetime.now()
+
+    for key in r.scan_iter("prescription:*"):
+        data = r.hgetall(key)
+
+        if "expiry_date" not in data:
+            continue
+
+        expiry = datetime.fromisoformat(data["expiry_date"])
+
+        if expiry < now:
+            r.hset(key, "status", "Expired")
